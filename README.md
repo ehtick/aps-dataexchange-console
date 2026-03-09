@@ -2,7 +2,7 @@
 
 [![oAuth2](https://img.shields.io/badge/oAuth2-v2-green.svg)](http://developer.autodesk.com/)
 ![.NET](https://img.shields.io/badge/.NET%20Framework-4.8-blue.svg)
-![SDK Version](https://img.shields.io/badge/Data%20Exchange%20SDK-7.1.0-orange.svg)
+![SDK Version](https://img.shields.io/badge/Data%20Exchange%20SDK-7.2.0-orange.svg)
 ![Intermediary](https://img.shields.io/badge/Level-Intermediary-lightblue.svg)
 [![License](https://img.shields.io/badge/License-Autodesk%20SDK-blue.svg)](LICENSE)
 
@@ -24,7 +24,7 @@ This is a **sample console connector** that demonstrates how to use the Autodesk
 - [🚀 Quick Start](#-quick-start) - Get up and running quickly
 - [💻 Usage Examples](#-usage-examples) - See the console connector in action
 - [📚 Command Reference](#-command-reference) - Complete command documentation  
-- [🔄 Migration Guide](#-migration-guide-sdk-710-upgrade) - **SDK 7.1.0 Upgrade Guide**
+- [🔄 Migration Guide](#-migration-guide-sdk-720-upgrade) - **SDK 7.2.0 Upgrade Guide**
 - [🏗️ Architecture](#️-architecture) - Understand the codebase structure
 - [🔧 Extending the Application](#-extending-the-application) - Add custom functionality
 
@@ -217,236 +217,71 @@ public class MyCustomCommand : Command
 2. Add to command's `Options` list
 3. Use `GetOption<T>()` to access values
 
-## 🔄 Migration Guide: SDK 7.1.0 Upgrade
+## 🔄 Migration Guide: SDK 7.2.0 Upgrade
 
-This section documents the migration from SDK 6.3.0 to **Autodesk Data Exchange SDK 7.1.0**.
+This section documents the migration from SDK 7.1.0 to **Autodesk Data Exchange SDK 7.2.0**.
 
 ### 📋 Overview of Changes
 
-This upgrade includes significant API changes:
-- **SDK Version**: Upgraded to `Autodesk.DataExchange 7.1.0`
-- **API Simplification**: Removed `GeometryProperties` wrapper class
-- **Explicit Format Specification**: Geometry format now required as explicit parameter
+This is a **non-breaking** upgrade focused on bug fixes and minor improvements:
+- **SDK Version**: Upgraded to `Autodesk.DataExchange 7.2.0`
+- **No Breaking Changes**: All existing APIs remain fully compatible
+- **Bug Fixes**: Various stability and reliability improvements
+- **Minor Improvements**: Internal enhancements to SDK performance
 
 ### 🚀 Key Dependency Updates
 
 | Package | Previous Version | New Version | Impact |
 |---------|------------------|-------------|---------|
-| `Autodesk.DataExchange` | `6.3.0` | `7.1.0` | **Major** - Breaking changes to geometry creation APIs |
-
-### ⚠️ Breaking Changes
-
-#### 1. `GeometryProperties` Class Removed
-
-The `GeometryProperties` class that was previously used to wrap geometry parameters has been **removed entirely**. All methods that accepted `GeometryProperties` now take individual parameters directly.
-
-#### 2. `CreateFileGeometry` API Change
-
-**Before (SDK 6.3.0):**
-```csharp
-// Required wrapping path and render style in GeometryProperties
-var geometry = ElementDataModel.CreateFileGeometry(
-    new GeometryProperties(filePath, renderStyle));
-```
-
-**After (SDK 7.1.0):**
-```csharp
-// Pass parameters directly with explicit GeometryFormat
-var geometry = ElementDataModel.CreateFileGeometry(
-    filePath, 
-    GeometryFormat.Step,  // Explicit format required
-    renderStyle,          // Optional: RenderStyle
-    units);               // Optional: Units
-```
-
-**Key differences:**
-- No `GeometryProperties` wrapper
-- `GeometryFormat` enum is now **required** as the second parameter
-- `RenderStyle` and `Units` are optional parameters
-
-#### 3. `CreatePrimitiveGeometry` API Change
-
-**Before (SDK 6.3.0):**
-```csharp
-// For GeometryContainer
-var geometry = ElementDataModel.CreatePrimitiveGeometry(
-    new GeometryProperties(geomContainer, renderStyle));
-
-// For DesignPoint
-var geometry = ElementDataModel.CreatePrimitiveGeometry(
-    new GeometryProperties(designPoint, renderStyle));
-```
-
-**After (SDK 7.1.0):**
-```csharp
-// For GeometryContainer - pass directly
-var geometry = ElementDataModel.CreatePrimitiveGeometry(
-    geomContainer,  // Autodesk.GeometryPrimitives.Data.Geometry
-    renderStyle,    // Optional: RenderStyle
-    units);         // Optional: Units
-
-// For DesignPoint - pass directly
-var geometry = ElementDataModel.CreatePrimitiveGeometry(
-    designPoint,    // Autodesk.GeometryPrimitives.Data.Geometry
-    renderStyle,    // Optional: RenderStyle
-    units);         // Optional: Units
-```
-
-**Key differences:**
-- No `GeometryProperties` wrapper
-- Pass the geometry object (`GeometryContainer`, `DesignPoint`, etc.) directly
-- `RenderStyle` and `Units` are optional parameters
+| `Autodesk.DataExchange` | `7.1.0` | `7.2.0` | **Minor** - Bug fixes and improvements, no breaking changes |
 
 ### 🔧 Migration Steps
 
 #### Step 1: Update Package References
-Update your `packages.config` or project file:
+
+Update your `packages.config`:
 
 ```xml
-<package id="Autodesk.DataExchange" version="7.1.0" targetFramework="net48" />
+<package id="Autodesk.DataExchange" version="7.2.0" targetFramework="net48" />
 ```
 
-#### Step 2: Add New Using Statement
-Add the following using statement to access the `GeometryFormat` enum:
+Or if using a `.csproj` `PackageReference`:
 
-```csharp
-using Autodesk.DataExchange.Core.Enums;
+```xml
+<PackageReference Include="Autodesk.DataExchange" Version="7.2.0" />
 ```
 
-#### Step 3: Update `CreateFileGeometry` Calls
+#### Step 2: Restore and Rebuild
 
-**Before:**
-```csharp
-var path = "path/to/geometry.stp";
-var geometry = ElementDataModel.CreateFileGeometry(
-    new GeometryProperties(path, renderStyle));
+**Visual Studio:**
+- Open `ConsoleConnector.sln`
+- Rebuild the solution (packages restore automatically)
+
+**Command Line:**
+```bash
+BuildSolution.bat
 ```
 
-**After:**
-```csharp
-var path = "path/to/geometry.stp";
-var geometry = ElementDataModel.CreateFileGeometry(
-    path, 
-    GeometryFormat.Step, 
-    renderStyle);
-```
+#### Step 3: Verify
 
-#### Step 4: Update `CreatePrimitiveGeometry` Calls
+Run the comprehensive workflow test to confirm everything works as expected:
 
-**Before (GeometryContainer):**
-```csharp
-var geomContainer = new GeometryContainer();
-geomContainer.Curves.Add(new Line(...));
-var geometry = ElementDataModel.CreatePrimitiveGeometry(
-    new GeometryProperties(geomContainer, renderStyle));
-```
-
-**After (GeometryContainer):**
-```csharp
-var geomContainer = new GeometryContainer();
-geomContainer.Curves.Add(new Line(...));
-var geometry = ElementDataModel.CreatePrimitiveGeometry(
-    geomContainer, 
-    renderStyle);
-```
-
-**Before (DesignPoint):**
-```csharp
-var point = new DesignPoint(x, y, z);
-var geometry = ElementDataModel.CreatePrimitiveGeometry(
-    new GeometryProperties(point, renderStyle));
-```
-
-**After (DesignPoint):**
-```csharp
-var point = new DesignPoint(x, y, z);
-var geometry = ElementDataModel.CreatePrimitiveGeometry(
-    point, 
-    renderStyle);
-```
-
-#### Step 5: Helper Method for File Format Detection (Optional)
-
-If you need to determine the geometry format from file extensions dynamically:
-
-```csharp
-private GeometryFormat GetGeometryFormat(string fileName)
-{
-    var extension = Path.GetExtension(fileName).ToLowerInvariant();
-    switch (extension)
-    {
-        case ".stp":
-        case ".step":
-            return GeometryFormat.Step;
-        case ".ifc":
-            return GeometryFormat.Ifc;
-        case ".obj":
-            return GeometryFormat.Obj;
-        default:
-            return GeometryFormat.Unknown;
-    }
-}
-```
-
-### 📚 GeometryFormat Enum Values
-
-| Value | Description | File Extensions |
-|-------|-------------|-----------------|
-| `GeometryFormat.Unknown` | Unknown format | - |
-| `GeometryFormat.Step` | STEP file format | `.stp`, `.step` |
-| `GeometryFormat.Obj` | OBJ mesh format | `.obj` |
-| `GeometryFormat.Ifc` | IFC file format | `.ifc` |
-| `GeometryFormat.Bimdex` | Bimdex geometry format | - |
-| `GeometryFormat.LargePrimitive` | Large primitive format | - |
-
-### 📖 Method Signatures Reference
-
-#### CreateFileGeometry
-```csharp
-public static FileGeometry CreateFileGeometry(
-    string filePath, 
-    GeometryFormat format, 
-    RenderStyle renderStyle = null, 
-    Units units = null)
-```
-
-There is also an overload that accepts a `MemoryStream`:
-```csharp
-public static FileGeometry CreateFileGeometry(
-    MemoryStream geometryStream, 
-    GeometryFormat format, 
-    RenderStyle renderStyle = null, 
-    Units units = null)
-```
-
-#### CreatePrimitiveGeometry
-```csharp
-public static PrimitiveGeometry CreatePrimitiveGeometry(
-    Autodesk.GeometryPrimitives.Data.Geometry geometry, 
-    RenderStyle renderStyle = null, 
-    Units units = null)
-```
-
-#### CreateMeshGeometry
-```csharp
-public static MeshGeometry CreateMeshGeometry(
-    Autodesk.GeometryUtilities.MeshAPI.Mesh mesh, 
-    string meshName, 
-    Units units = null)
+```bash
+>> WorkFlowTest
 ```
 
 ### 🎯 Summary of Changes
 
-| Aspect | SDK 6.3.0 | SDK 7.1.0 |
+| Aspect | SDK 7.1.0 | SDK 7.2.0 |
 |--------|-----------|-----------|
-| Geometry wrapper | `GeometryProperties` class | Direct parameters |
-| File format | Inferred from file | Explicit `GeometryFormat` enum |
-| API style | Wrapper object pattern | Direct parameter pattern |
-| Required namespace | - | `Autodesk.DataExchange.Core.Enums` |
+| API surface | Stable | No changes |
+| Breaking changes | - | None |
+| Upgrade effort | - | Version bump only |
+| Key focus | API simplification | Bug fixes & improvements |
 
 ### 🧪 Testing Your Migration
 
-After migration, run the comprehensive workflow test:
+After upgrading, run the comprehensive workflow test:
 
 ```bash
 >> WorkFlowTest
@@ -459,40 +294,138 @@ This command validates:
 - ✅ Synchronization workflows
 - ✅ File download capabilities
 
-### 🐛 Troubleshooting Common Issues
-
-#### Issue: `GeometryProperties` could not be found
-**Error**: `The type or namespace name 'GeometryProperties' could not be found`
-**Solution**: Update all `CreateFileGeometry` and `CreatePrimitiveGeometry` calls to use the new direct parameter syntax as shown in this guide.
-
-#### Issue: Cannot convert from `DesignPoint` to `Point`
-**Error**: `Argument 1: cannot convert from 'Autodesk.GeometryPrimitives.Data.DX.DesignPoint' to 'Autodesk.GeometryPrimitives.Data.Point'`
-**Solution**: Pass `DesignPoint` directly to `CreatePrimitiveGeometry` instead of wrapping it in a `GeometryContainer`:
-
-```csharp
-// Correct
-var point = new DesignPoint(x, y, z);
-ElementDataModel.CreatePrimitiveGeometry(point, renderStyle);
-
-// Incorrect - don't add DesignPoint to GeometryContainer.Points
-var container = new GeometryContainer();
-container.Points.Add(point); // This will cause a type error
-```
-
-#### Issue: Missing GeometryFormat namespace
-**Error**: `The name 'GeometryFormat' does not exist in the current context`
-**Solution**: Add the using statement: `using Autodesk.DataExchange.Core.Enums;`
-
 ---
 
 **Migration Checklist:**
-- [ ] Updated all package references to 7.1.0
-- [ ] Added `using Autodesk.DataExchange.Core.Enums;` where needed
-- [ ] Updated all `CreateFileGeometry` calls to use direct parameters with `GeometryFormat`
-- [ ] Updated all `CreatePrimitiveGeometry` calls to pass geometry objects directly
-- [ ] Removed all references to `GeometryProperties` class
+- [ ] Updated all package references to 7.2.0
+- [ ] Restored NuGet packages and rebuilt the solution
 - [ ] Tested core workflows with `WorkFlowTest`
 - [ ] Verified all geometry types render correctly
+
+---
+
+<details>
+<summary><strong>📜 Historical: SDK 6.3.0 → 7.1.0 Migration Guide</strong></summary>
+
+This section documents the previous migration from SDK 6.3.0 to **Autodesk Data Exchange SDK 7.1.0** and is preserved here for reference.
+
+#### Overview of Changes
+
+This upgrade included significant API changes:
+- **SDK Version**: Upgraded to `Autodesk.DataExchange 7.1.0`
+- **API Simplification**: Removed `GeometryProperties` wrapper class
+- **Explicit Format Specification**: Geometry format now required as explicit parameter
+
+#### Key Dependency Updates
+
+| Package | Previous Version | New Version | Impact |
+|---------|------------------|-------------|---------|
+| `Autodesk.DataExchange` | `6.3.0` | `7.1.0` | **Major** - Breaking changes to geometry creation APIs |
+
+#### Breaking Changes
+
+##### 1. `GeometryProperties` Class Removed
+
+The `GeometryProperties` class that was previously used to wrap geometry parameters was **removed entirely**. All methods that accepted `GeometryProperties` now take individual parameters directly.
+
+##### 2. `CreateFileGeometry` API Change
+
+**Before (SDK 6.3.0):**
+```csharp
+var geometry = ElementDataModel.CreateFileGeometry(
+    new GeometryProperties(filePath, renderStyle));
+```
+
+**After (SDK 7.1.0):**
+```csharp
+var geometry = ElementDataModel.CreateFileGeometry(
+    filePath, 
+    GeometryFormat.Step,
+    renderStyle,
+    units);
+```
+
+Key differences:
+- No `GeometryProperties` wrapper
+- `GeometryFormat` enum is **required** as the second parameter
+- `RenderStyle` and `Units` are optional parameters
+
+##### 3. `CreatePrimitiveGeometry` API Change
+
+**Before (SDK 6.3.0):**
+```csharp
+var geometry = ElementDataModel.CreatePrimitiveGeometry(
+    new GeometryProperties(geomContainer, renderStyle));
+```
+
+**After (SDK 7.1.0):**
+```csharp
+var geometry = ElementDataModel.CreatePrimitiveGeometry(
+    geomContainer,
+    renderStyle,
+    units);
+```
+
+Key differences:
+- No `GeometryProperties` wrapper
+- Pass the geometry object (`GeometryContainer`, `DesignPoint`, etc.) directly
+- `RenderStyle` and `Units` are optional parameters
+
+#### Migration Steps (6.3.0 → 7.1.0)
+
+1. Update package references to 7.1.0
+2. Add `using Autodesk.DataExchange.Core.Enums;` where needed
+3. Update all `CreateFileGeometry` calls to use direct parameters with `GeometryFormat`
+4. Update all `CreatePrimitiveGeometry` calls to pass geometry objects directly
+5. Remove all references to `GeometryProperties` class
+
+#### GeometryFormat Enum Values
+
+| Value | Description | File Extensions |
+|-------|-------------|-----------------|
+| `GeometryFormat.Unknown` | Unknown format | - |
+| `GeometryFormat.Step` | STEP file format | `.stp`, `.step` |
+| `GeometryFormat.Obj` | OBJ mesh format | `.obj` |
+| `GeometryFormat.Ifc` | IFC file format | `.ifc` |
+| `GeometryFormat.Bimdex` | Bimdex geometry format | - |
+| `GeometryFormat.LargePrimitive` | Large primitive format | - |
+
+#### Method Signatures Reference
+
+```csharp
+public static FileGeometry CreateFileGeometry(
+    string filePath, 
+    GeometryFormat format, 
+    RenderStyle renderStyle = null, 
+    Units units = null)
+
+public static FileGeometry CreateFileGeometry(
+    MemoryStream geometryStream, 
+    GeometryFormat format, 
+    RenderStyle renderStyle = null, 
+    Units units = null)
+
+public static PrimitiveGeometry CreatePrimitiveGeometry(
+    Autodesk.GeometryPrimitives.Data.Geometry geometry, 
+    RenderStyle renderStyle = null, 
+    Units units = null)
+
+public static MeshGeometry CreateMeshGeometry(
+    Autodesk.GeometryUtilities.MeshAPI.Mesh mesh, 
+    string meshName, 
+    Units units = null)
+```
+
+#### Summary (6.3.0 → 7.1.0)
+
+| Aspect | SDK 6.3.0 | SDK 7.1.0 |
+|--------|-----------|-----------|
+| Geometry wrapper | `GeometryProperties` class | Direct parameters |
+| File format | Inferred from file | Explicit `GeometryFormat` enum |
+| API style | Wrapper object pattern | Direct parameter pattern |
+| Required namespace | - | `Autodesk.DataExchange.Core.Enums` |
+
+</details>
 
 ## 📖 Documentation
 
