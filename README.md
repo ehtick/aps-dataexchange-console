@@ -86,9 +86,15 @@ BuildSolution.bat
 Update `src/ConsoleConnector/App.config` with your app credentials:
 ```xml
 <appSettings>
-    <add key="APS_CLIENT_ID" value="your_client_id" />
-    <add key="APS_CLIENT_SECRET" value="your_client_secret" />
-    <add key="APS_CALLBACK_URL" value="your_callback_url" />
+    <add key="AuthClientId" value="your_client_id" />
+    <add key="AuthClientSecret" value="your_client_secret" />
+    <add key="AuthCallback" value="your_callback_url" />
+    <add key="ApplicationDataPath" value="" />
+    <add key="ConnectorName" value="your_connector_name" />
+    <add key="ConnectorVersion" value="1.0.0" />
+    <add key="HostApplicationName" value="your_host_application_name" />
+    <add key="HostApplicationVersion" value="2.0.0" />
+    <add key="LogLevel" value="" />
 </appSettings>
 ```
 
