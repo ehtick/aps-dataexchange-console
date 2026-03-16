@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\packages\MSTest.TestAdapter.3.9.3\build\net462\MSTest.TestAdapter.props" Condition="Exists('..\..\packages\MSTest.TestAdapter.3.9.3\build\net462\MSTest.TestAdapter.props')" />
   <Import Project="..\..\packages\Microsoft.Testing.Extensions.Telemetry.1.7.3\build\netstandard2.0\Microsoft.Testing.Extensions.Telemetry.props" Condition="Exists('..\..\packages\Microsoft.Testing.Extensions.Telemetry.1.7.3\build\netstandard2.0\Microsoft.Testing.Extensions.Telemetry.props')" />
@@ -63,8 +63,8 @@
     <Reference Include="AngleSharp, Version=1.2.0.0, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea, processorArchitecture=MSIL">
       <HintPath>..\..\packages\AngleSharp.1.2.0\lib\net472\AngleSharp.dll</HintPath>
     </Reference>
-    <Reference Include="Autodesk.DataExchange, Version=7.2.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <HintPath>..\..\packages\Autodesk.DataExchange.7.2.0-beta\lib\net48\Autodesk.DataExchange.dll</HintPath>
+    <Reference Include="Autodesk.DataExchange, Version=7.2.1.0, Culture=neutral, processorArchitecture=AMD64">
+      <HintPath>..\..\packages\Autodesk.DataExchange.7.2.1-beta\lib\net48\Autodesk.DataExchange.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Autodesk.GeometryPrimitives.Data, Version=0.7.22.0, Culture=neutral, processorArchitecture=AMD64">
@@ -458,12 +458,12 @@
     <Error Condition="!Exists('..\..\packages\Microsoft.Testing.Extensions.Telemetry.1.7.3\build\netstandard2.0\Microsoft.Testing.Extensions.Telemetry.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Testing.Extensions.Telemetry.1.7.3\build\netstandard2.0\Microsoft.Testing.Extensions.Telemetry.props'))" />
     <Error Condition="!Exists('..\..\packages\MSTest.TestAdapter.3.9.3\build\net462\MSTest.TestAdapter.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\MSTest.TestAdapter.3.9.3\build\net462\MSTest.TestAdapter.props'))" />
     <Error Condition="!Exists('..\..\packages\MSTest.TestAdapter.3.9.3\build\net462\MSTest.TestAdapter.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\MSTest.TestAdapter.3.9.3\build\net462\MSTest.TestAdapter.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Autodesk.DataExchange.7.2.0-beta\build\Autodesk.DataExchange.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Autodesk.DataExchange.7.2.0-beta\build\Autodesk.DataExchange.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Autodesk.DataExchange.7.2.1-beta\build\Autodesk.DataExchange.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Autodesk.DataExchange.7.2.1-beta\build\Autodesk.DataExchange.targets'))" />
   </Target>
   <Import Project="..\..\packages\ForgeParameters-csharp_win_release_intel64_v140.3.0.6\build\ForgeParameters-csharp_win_release_intel64_v140.targets" Condition="Exists('..\..\packages\ForgeParameters-csharp_win_release_intel64_v140.3.0.6\build\ForgeParameters-csharp_win_release_intel64_v140.targets')" />
   <Import Project="..\..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets" Condition="Exists('..\..\packages\Microsoft.Extensions.Logging.Abstractions.6.0.0\build\Microsoft.Extensions.Logging.Abstractions.targets')" />
   <Import Project="..\..\packages\Microsoft.Testing.Platform.1.7.3\build\netstandard2.0\Microsoft.Testing.Platform.targets" Condition="Exists('..\..\packages\Microsoft.Testing.Platform.1.7.3\build\netstandard2.0\Microsoft.Testing.Platform.targets')" />
   <Import Project="..\..\packages\Microsoft.Testing.Platform.MSBuild.1.7.3\build\Microsoft.Testing.Platform.MSBuild.targets" Condition="Exists('..\..\packages\Microsoft.Testing.Platform.MSBuild.1.7.3\build\Microsoft.Testing.Platform.MSBuild.targets')" />
   <Import Project="..\..\packages\MSTest.TestAdapter.3.9.3\build\net462\MSTest.TestAdapter.targets" Condition="Exists('..\..\packages\MSTest.TestAdapter.3.9.3\build\net462\MSTest.TestAdapter.targets')" />
-  <Import Project="..\..\packages\Autodesk.DataExchange.7.2.0-beta\build\Autodesk.DataExchange.targets" Condition="Exists('..\..\packages\Autodesk.DataExchange.7.2.0-beta\build\Autodesk.DataExchange.targets')" />
+  <Import Project="..\..\packages\Autodesk.DataExchange.7.2.1-beta\build\Autodesk.DataExchange.targets" Condition="Exists('..\..\packages\Autodesk.DataExchange.7.2.1-beta\build\Autodesk.DataExchange.targets')" />
 </Project>

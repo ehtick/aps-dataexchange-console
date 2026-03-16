@@ -2,7 +2,7 @@
 
 [![oAuth2](https://img.shields.io/badge/oAuth2-v2-green.svg)](http://developer.autodesk.com/)
 ![.NET](https://img.shields.io/badge/.NET%20Framework-4.8-blue.svg)
-![SDK Version](https://img.shields.io/badge/Data%20Exchange%20SDK-7.2.0-orange.svg)
+![SDK Version](https://img.shields.io/badge/Data%20Exchange%20SDK-7.2.1--beta-orange.svg)
 ![Intermediary](https://img.shields.io/badge/Level-Intermediary-lightblue.svg)
 [![License](https://img.shields.io/badge/License-Autodesk%20SDK-blue.svg)](LICENSE)
 
@@ -23,8 +23,8 @@ This is a **sample console connector** that demonstrates how to use the Autodesk
 
 - [🚀 Quick Start](#-quick-start) - Get up and running quickly
 - [💻 Usage Examples](#-usage-examples) - See the console connector in action
-- [📚 Command Reference](#-command-reference) - Complete command documentation  
-- [🔄 Migration Guide](#-migration-guide-sdk-720-upgrade) - **SDK 7.2.0 Upgrade Guide**
+- [📚 Command Reference](#-command-reference) - Complete command documentation
+- [🔄 Migration Guide](#-migration-guide-sdk-721-upgrade) - **SDK 7.2.1 Upgrade Guide**
 - [🏗️ Architecture](#️-architecture) - Understand the codebase structure
 - [🔧 Extending the Application](#-extending-the-application) - Add custom functionality
 
@@ -86,9 +86,15 @@ BuildSolution.bat
 Update `src/ConsoleConnector/App.config` with your app credentials:
 ```xml
 <appSettings>
-    <add key="APS_CLIENT_ID" value="your_client_id" />
-    <add key="APS_CLIENT_SECRET" value="your_client_secret" />
-    <add key="APS_CALLBACK_URL" value="your_callback_url" />
+    <add key="AuthClientId" value="your_client_id" />
+    <add key="AuthClientSecret" value="your_client_secret" />
+    <add key="AuthCallback" value="your_callback_url" />
+    <add key="ApplicationDataPath" value="" />
+    <add key="ConnectorName" value="your_connector_name" />
+    <add key="ConnectorVersion" value="1.0.0" />
+    <add key="HostApplicationName" value="your_host_application_name" />
+    <add key="HostApplicationVersion" value="2.0.0" />
+    <add key="LogLevel" value="" />
 </appSettings>
 ```
 
@@ -203,7 +209,7 @@ public class MyCustomCommand : Command
         // Implementation here
         return true;
     }
-    
+
     public override Command Clone()
     {
         return new MyCustomCommand(this);
@@ -217,7 +223,94 @@ public class MyCustomCommand : Command
 2. Add to command's `Options` list
 3. Use `GetOption<T>()` to access values
 
-## 🔄 Migration Guide: SDK 7.2.0 Upgrade
+## 🔄 Migration Guide: SDK 7.2.1 Upgrade
+
+This section documents the migration from SDK 7.2.0 to **Autodesk Data Exchange SDK 7.2.1**.
+
+### 📋 Overview of Changes
+
+This is a **non-breaking** upgrade focused on bug fixes and minor improvements:
+- **SDK Version**: Upgraded to `Autodesk.DataExchange 7.2.1-beta`
+- **No Breaking Changes**: All existing APIs remain fully compatible
+- **Bug Fixes**: Various stability and reliability improvements
+
+### 🚀 Key Dependency Updates
+
+| Package | Previous Version | New Version | Impact |
+|---------|------------------|-------------|---------|
+| `Autodesk.DataExchange` | `7.2.0-beta` | `7.2.1-beta` | **Patch** - Bug fixes, no breaking changes |
+
+### 🔧 Migration Steps
+
+#### Step 1: Update Package References
+
+Update your `packages.config`:
+
+```xml
+<package id="Autodesk.DataExchange" version="7.2.1-beta" targetFramework="net48" />
+```
+
+Or if using a `.csproj` `PackageReference`:
+
+```xml
+<PackageReference Include="Autodesk.DataExchange" Version="7.2.1-beta" />
+```
+
+#### Step 2: Restore and Rebuild
+
+**Visual Studio:**
+- Open `ConsoleConnector.sln`
+- Rebuild the solution (packages restore automatically)
+
+**Command Line:**
+```bash
+BuildSolution.bat
+```
+
+#### Step 3: Verify
+
+Run the comprehensive workflow test to confirm everything works as expected:
+
+```bash
+>> WorkFlowTest
+```
+
+### 🎯 Summary of Changes
+
+| Aspect | SDK 7.2.0 | SDK 7.2.1 |
+|--------|-----------|-----------|
+| API surface | Stable | No changes |
+| Breaking changes | - | None |
+| Upgrade effort | - | Version bump only |
+| Key focus | Bug fixes & improvements | Bug fixes & improvements |
+
+### 🧪 Testing Your Migration
+
+After upgrading, run the comprehensive workflow test:
+
+```bash
+>> WorkFlowTest
+```
+
+This command validates:
+- ✅ Exchange creation and management
+- ✅ Geometry processing (BREP, IFC, Mesh, Primitives)
+- ✅ Parameter operations
+- ✅ Synchronization workflows
+- ✅ File download capabilities
+
+---
+
+**Migration Checklist:**
+- [ ] Updated all package references to 7.2.1-beta
+- [ ] Restored NuGet packages and rebuilt the solution
+- [ ] Tested core workflows with `WorkFlowTest`
+- [ ] Verified all geometry types render correctly
+
+---
+
+<details>
+<summary><strong>📜 Historical: SDK 7.1.0 → 7.2.0 Migration Guide</strong></summary>
 
 This section documents the migration from SDK 7.1.0 to **Autodesk Data Exchange SDK 7.2.0**.
 
@@ -302,6 +395,8 @@ This command validates:
 - [ ] Tested core workflows with `WorkFlowTest`
 - [ ] Verified all geometry types render correctly
 
+</details>
+
 ---
 
 <details>
@@ -339,7 +434,7 @@ var geometry = ElementDataModel.CreateFileGeometry(
 **After (SDK 7.1.0):**
 ```csharp
 var geometry = ElementDataModel.CreateFileGeometry(
-    filePath, 
+    filePath,
     GeometryFormat.Step,
     renderStyle,
     units);
@@ -394,25 +489,25 @@ Key differences:
 
 ```csharp
 public static FileGeometry CreateFileGeometry(
-    string filePath, 
-    GeometryFormat format, 
-    RenderStyle renderStyle = null, 
+    string filePath,
+    GeometryFormat format,
+    RenderStyle renderStyle = null,
     Units units = null)
 
 public static FileGeometry CreateFileGeometry(
-    MemoryStream geometryStream, 
-    GeometryFormat format, 
-    RenderStyle renderStyle = null, 
+    MemoryStream geometryStream,
+    GeometryFormat format,
+    RenderStyle renderStyle = null,
     Units units = null)
 
 public static PrimitiveGeometry CreatePrimitiveGeometry(
-    Autodesk.GeometryPrimitives.Data.Geometry geometry, 
-    RenderStyle renderStyle = null, 
+    Autodesk.GeometryPrimitives.Data.Geometry geometry,
+    RenderStyle renderStyle = null,
     Units units = null)
 
 public static MeshGeometry CreateMeshGeometry(
-    Autodesk.GeometryUtilities.MeshAPI.Mesh mesh, 
-    string meshName, 
+    Autodesk.GeometryUtilities.MeshAPI.Mesh mesh,
+    string meshName,
     Units units = null)
 ```
 
@@ -447,7 +542,7 @@ This sample code is part of the Autodesk Data Exchange .NET SDK (Software Develo
 
 ## ✍️ Authors
 
-**Dhiraj Lotake** - *Autodesk*  
+**Dhiraj Lotake** - *Autodesk*
 **Hariom Sharma** - *Autodesk*
 
 ---
