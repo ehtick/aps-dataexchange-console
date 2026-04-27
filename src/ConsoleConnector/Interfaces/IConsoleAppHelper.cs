@@ -30,6 +30,9 @@ namespace Autodesk.DataExchange.ConsoleApp.Interfaces
         Task<IResponse<ExchangeDetails>> CreateExchange(string exchangeTitle);
         void GetHubId(string projectUrn, out string hubId);
         void GetRegion(string hubId, out string region);
+        Task<IResponse<string>> GetHubIdAsync(string projectUrn);
+        Task<string> GetRegionAsync(string hubId);
+        Task<(bool IsValid, string ErrorMessage, string ResolvedRegion)> ValidateHubAccessAsync(string hubId, string projectUrn);
         Task<bool> SyncExchange(DataExchangeIdentifier dataExchangeIdentifier,ExchangeDetails exchangeDetails, ElementDataModel exchangeData);
 
         IClient GetClient();
