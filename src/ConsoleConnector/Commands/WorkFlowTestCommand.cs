@@ -27,13 +27,32 @@ namespace Autodesk.DataExchange.ConsoleApp.Commands
 
         public override async Task<bool> Execute()
         {
+            // The workflow chains many commands together using the exchange created in the first step.
+            // If a default folder hasn't been configured, CreateExchangeCommand silently returns false
+            // and every subsequent step fails (culminating in a KeyNotFoundException when reading
+            // CommandOutput["ElementId"] from a CreateBrep step that never ran). Detect this up front
+            // and bail out with a single, clear message instead of dumping a wall of cascading errors.
+            if (ConsoleAppHelper.TryGetFolderDetails(out _, out _, out _, out _))
+            {
+                Console.WriteLine("[ERROR] No default folder is configured.");
+                Console.WriteLine("        Run the 'SetDefaultFolder' command first, then re-run WorkFlowTest.");
+                Console.WriteLine();
+                return false;
+            }
+
             var timestamp = DateTime.Now.ToString("yyyy-MM-dd_HHmmss");
             var randomSuffix = new Random().Next(100, 999);
             var exchangeTitle = $"WorkflowTest_{timestamp}_{randomSuffix}";
             Console.WriteLine($"[CREATING] Exchange: {exchangeTitle}");
             var createExchangeCommand = new CreateExchangeCommand(ConsoleAppHelper);
-            createExchangeCommand.GetOption<ExchangeTitle>().SetValue(exchangeTitle);            
-            await createExchangeCommand.Execute();        
+            createExchangeCommand.GetOption<ExchangeTitle>().SetValue(exchangeTitle);
+            var exchangeCreated = await createExchangeCommand.Execute();
+            if (!exchangeCreated || string.IsNullOrEmpty(createExchangeCommand.ExchangeId))
+            {
+                Console.WriteLine("[ABORT] Exchange creation failed. Skipping the rest of WorkFlowTest.");
+                Console.WriteLine();
+                return false;
+            }
 
             Console.WriteLine("[GEOMETRY] Adding BREP geometry #1");
             var addBrep = new CreateBrepCommand(ConsoleAppHelper);
