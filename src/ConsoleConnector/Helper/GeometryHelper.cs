@@ -33,18 +33,7 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
             new Tuple<string, string, string, string>("nist_ftc_09_asme1_rd.stp","Generic","Generic","Generic"),
         };
         Random random = new Random();
-        RenderStyle commonRenderStyle = new RenderStyle()
-        {
-            Name = "Door Render Style",
-            RGBA = new RGBA()
-            {
-                Red = 255,
-                Blue = 0,
-                Green = 0,
-                Alpha = 255
-            },
-            Transparency = 1
-        };
+        RenderStyle commonRenderStyle = new RenderStyle("Door Render Style", new RGBA(255, 0, 0, 255), 1);
 
         public Element CreateBrep(ElementDataModel elementDataModel)
         {

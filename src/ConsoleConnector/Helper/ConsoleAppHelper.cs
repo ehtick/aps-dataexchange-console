@@ -41,7 +41,6 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
         public void Start()
         {
             BuildCommands();
-            //CreateClient();
             CreateClientAsync().GetAwaiter().GetResult();
             ReadFolderDetails();
         }
@@ -345,7 +344,6 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
         {
             Commands.Add(new GetExchangeCommand(this));
             Commands.Add(new SetFolderCommand(this));
-            Commands.Add(new SetMyFolderCommand(this));
             Commands.Add(new CreateExchangeCommand(this));
             Commands.Add(new CreateBrepCommand(this));
             Commands.Add(new CreateMeshCommand(this));
