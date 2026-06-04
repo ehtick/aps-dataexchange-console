@@ -223,6 +223,162 @@ public class MyCustomCommand : Command
 2. Add to command's `Options` list
 3. Use `GetOption<T>()` to access values
 
+## 🔄 Migration Guide: SDK 7.4.0 Upgrade
+
+This section documents the migration from SDK 7.2.1 to **Autodesk Data Exchange SDK 7.4.0**.
+
+### 📋 Overview of Changes
+
+- **SDK Version**: Upgraded to `Autodesk.DataExchange 7.4.0-beta`
+- **Breaking Changes**: Yes — 3 code changes required (see below)
+- **Build result**: 0 errors after fixes applied
+
+### 🚀 Key Dependency Updates
+
+| Package | Previous Version | New Version | Impact |
+|---------|------------------|-------------|---------|
+| `Autodesk.DataExchange` | `7.2.1-beta` | `7.4.0-beta` | **Minor** - 3 breaking changes |
+
+### ⚠️ Breaking Changes
+
+#### 1. `SDKOptionsDefaultSetup` — auth properties removed from initializer
+
+`ConnectorName`, `ConnectorVersion`, `HostApplicationName`, `HostApplicationVersion` still exist on the base `SDKOptions` class and must be set there, but can still be set in the `SDKOptionsDefaultSetup` initializer. A new `FallbackRedirectUrls` property was added for port-conflict handling.
+
+**Before (7.2.1):**
+```csharp
+var sdkOptions = new SDKOptionsDefaultSetup()
+{
+    ClientId = authClientId,
+    CallBack = authCallBack,
+    ClientSecret = authClientSecret,
+    ConnectorName = "ConsoleConnector",
+    ConnectorVersion = "1.0.0",
+    HostApplicationName = "ConsoleConnector",
+    HostApplicationVersion = "1.0",
+};
+Client = new Client(sdkOptions);
+```
+
+**After (7.4.0):**
+```csharp
+var sdkOptions = new SDKOptionsDefaultSetup()
+{
+    ClientId = authClientId,
+    CallBack = authCallBack,
+    ClientSecret = authClientSecret,
+    ConnectorName = "ConsoleConnector",
+    ConnectorVersion = "1.0.0",
+    HostApplicationName = "ConsoleConnector",
+    HostApplicationVersion = "1.0",
+};
+
+// Auth must be obtained BEFORE new Client() — the ctor calls Initialize() → GetHashedUserId() internally
+var auth = new Auth(new AuthOptions { ClientId = authClientId, ClientSecret = authClientSecret, CallBack = authCallBack });
+await auth.GetAuthTokenAsync();
+sdkOptions.AuthProvider = auth;   // pre-assign so Client ctor reuses it
+
+await Task.Run(() => { Client = new Client(sdkOptions); });
+```
+
+#### 2. `Client` constructor now calls `Initialize()` internally
+
+`Client.Initialize()` is called inside the constructor — it requires a valid auth token at construction time. **Auth must be completed before `new Client(sdkOptions)` is called.**
+
+The fix is to pre-build an `Auth` instance, call `GetAuthTokenAsync()`, assign it to `sdkOptions.AuthProvider`, and then construct the client. `InitializeSDKOptions` (called inside the ctor) skips creating a new `AuthProvider` if one is already set.
+
+#### 3. `RenderStyle` and `RGBA` default constructors marked `[Obsolete]`
+
+Property setters are deprecated. Use the parameterized constructors instead.
+
+**Before (7.2.1):**
+```csharp
+RenderStyle renderStyle = new RenderStyle()
+{
+    Name = "My Style",
+    RGBA = new RGBA() { Red = 255, Green = 0, Blue = 0, Alpha = 255 },
+    Transparency = 1
+};
+```
+
+**After (7.4.0):**
+```csharp
+RenderStyle renderStyle = new RenderStyle("My Style", new RGBA(255, 0, 0, 255), 1);
+```
+
+### 🔧 Migration Steps
+
+#### Step 1: Update Package References
+
+Update your `packages.config`:
+
+```xml
+<package id="Autodesk.DataExchange" version="7.4.0-beta" targetFramework="net48" />
+```
+
+Update `ConsoleConnector.csproj` and `ConsoleConnector_Test.csproj`:
+- Assembly version: `Version=7.2.1.0` → `Version=7.4.0.0`
+- HintPaths: `Autodesk.DataExchange.7.2.1-beta\` → `Autodesk.DataExchange.7.4.0-beta\`
+- Build target imports: same substitution
+
+#### Step 2: Apply the 3 Code Fixes
+
+1. **`ConsoleAppHelper.cs`** — make `CreateClient` async, pre-authenticate before `new Client()`
+2. **`GeometryHelper.cs`** — replace `new RenderStyle() { ... }` with `new RenderStyle(name, rgba, transparency)`
+
+#### Step 3: Restore and Rebuild
+
+**Command Line:**
+```bash
+BuildSolution.bat
+```
+
+#### Step 4: Verify
+
+Run the comprehensive workflow test to confirm everything works as expected:
+
+```bash
+>> WorkFlowTest
+```
+
+### 🎯 Summary of Changes
+
+| Aspect | SDK 7.2.1 | SDK 7.4.0 |
+|--------|-----------|-----------|
+| API surface | Stable | 3 breaking changes |
+| `SDKOptionsDefaultSetup` | Sets all fields | Auth-only; metadata via `SDKOptions` base |
+| `Client` construction | Sync, no pre-auth needed | Requires auth token before `new Client()` |
+| `RenderStyle` / `RGBA` | Default constructor + setters | Parameterized constructors required |
+| Auth flow | Token fetched lazily | Must call `GetAuthTokenAsync()` explicitly before `new Client()` |
+| Upgrade effort | - | ~30 min — 2 files changed |
+
+### 🧪 Testing Your Migration
+
+After upgrading, run the comprehensive workflow test:
+
+```bash
+>> WorkFlowTest
+```
+
+This command validates:
+- ✅ Exchange creation and management
+- ✅ Geometry processing (BREP, IFC, Mesh, Primitives)
+- ✅ Parameter operations
+- ✅ Synchronization workflows
+- ✅ File download capabilities
+
+---
+
+**Migration Checklist:**
+- [x] Updated all package references to 7.4.0-beta
+- [x] Restored NuGet packages and rebuilt the solution (0 errors)
+- [x] Fixed `RenderStyle`/`RGBA` to use parameterized constructors
+- [x] Fixed `CreateClientAsync` to pre-authenticate before `new Client()`
+- [ ] Tested core workflows with `WorkFlowTest`
+- [ ] Verified all geometry types render correctly
+
+---
+
 ## 🔄 Migration Guide: SDK 7.2.1 Upgrade
 
 This section documents the migration from SDK 7.2.0 to **Autodesk Data Exchange SDK 7.2.1**.

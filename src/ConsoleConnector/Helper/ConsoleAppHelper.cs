@@ -33,7 +33,7 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
         public Client Client;
         private IStorage Storage => Client.SDKOptions.Storage;
 
-        public ILogger Logger { get => Client.SDKOptions.Logger; }
+        public ILogger Logger { get => Client?.SDKOptions?.Logger; }
 
         public GeometryHelper GeometryHelper = new GeometryHelper();
         public ParameterHelper ParameterHelper = new ParameterHelper();
@@ -41,39 +41,91 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
         public void Start()
         {
             BuildCommands();
-            CreateClient();
+            CreateClientAsync().GetAwaiter().GetResult();
             ReadFolderDetails();
         }
 
-        /// <summary>
-        /// Create an instance of Client.
-        /// </summary>
-        private void CreateClient()
+        private async Task CreateClientAsync()
         {
-            var authClientId = ConfigurationManager.AppSettings["AuthClientID"];
-            var authCallBack = ConfigurationManager.AppSettings["AuthCallBack"];
+            var authClientId = ConfigurationManager.AppSettings["AuthClientId"];
+            var authCallBack = ConfigurationManager.AppSettings["AuthCallback"];
             var authClientSecret = ConfigurationManager.AppSettings["AuthClientSecret"];
             if (string.IsNullOrEmpty(authClientId) || string.IsNullOrEmpty(authCallBack) || string.IsNullOrEmpty(authClientSecret))
-            {             
+            {
                 var message = "Authentication details are missing.";
-                message += "\nPlease add AuthClientID, AuthCallBack, AuthClientSecret in App.config file.";
+                message += "\nPlease add AuthClientId, AuthCallback, AuthClientSecret in App.config file.";
                 throw new AuthenticationMissingException(message);
             }
+
             var sdkOptions = new SDKOptionsDefaultSetup()
             {
-                HostApplicationName = "ConsoleConnector",
                 ClientId = authClientId,
                 CallBack = authCallBack,
                 ClientSecret = authClientSecret,
-                ConnectorName = "ConsoleConnector",
-                ConnectorVersion = "1.0.0",
-                HostApplicationVersion = "1.0",
+                ConnectorName = ConfigurationManager.AppSettings["ConnectorName"] ?? "ConsoleConnector",
+                ConnectorVersion = ConfigurationManager.AppSettings["ConnectorVersion"] ?? "1.0.0",
+                HostApplicationName = ConfigurationManager.AppSettings["HostApplicationName"] ?? "ConsoleConnector",
+                HostApplicationVersion = ConfigurationManager.AppSettings["HostApplicationVersion"] ?? "1.0",
             };
 
-            Client = new Client(sdkOptions);
+            // InitializeSDKOptions (called inside Client ctor) skips creating AuthProvider if one is already set.
+            // So we pre-build Auth, authenticate, then assign it — Client ctor will use the cached token.
+            var auth = new Autodesk.DataExchange.Authentication.Auth(
+                new Autodesk.DataExchange.Authentication.AuthOptions
+                {
+                    ClientId = authClientId,
+                    ClientSecret = authClientSecret,
+                    CallBack = authCallBack,
+                });
 
-            sdkOptions.Logger.SetDebugLogLevel();
+            try
+            {
+                await auth.GetAuthTokenAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                throw new AuthenticationMissingException(BuildAuthFailureMessage(authClientId, authCallBack, ex));
+            }
+
+            // Verify a token was actually issued. If the token endpoint returned 401, the SDK
+            // logs it but leaves the token null, which later crashes Client.GetHashedUserId().
+            var issuedToken = auth.GetAuthToken(false);
+            if (string.IsNullOrWhiteSpace(issuedToken))
+            {
+                throw new AuthenticationMissingException(BuildAuthFailureMessage(authClientId, authCallBack, null));
+            }
+
+            sdkOptions.AuthProvider = auth;
+
+            await Task.Run(() => { Client = new Client(sdkOptions); }).ConfigureAwait(false);
+
+            Client.SDKOptions.Logger.SetDebugLogLevel();
             Client.EnableHttpDebugLogging();
+        }
+
+        private static string BuildAuthFailureMessage(string clientId, string callback, Exception inner)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("Authentication with Autodesk Platform Services failed.");
+            sb.AppendLine("The authorization code was received from the browser, but exchanging it for an access token returned 401 (or produced no token).");
+            sb.AppendLine();
+            sb.AppendLine("Most common causes:");
+            sb.AppendLine("  1. AuthClientSecret in App.config is wrong, expired, or does not belong to AuthClientId.");
+            sb.AppendLine("  2. The Callback URL registered for this APS app does not exactly match AuthCallback (trailing slash matters).");
+            sb.AppendLine("  3. The APS app type is wrong — a PKCE/public app must not be sent a client_secret; a Traditional Web App requires one.");
+            sb.AppendLine("  4. The Data Exchange API is not enabled on this APS app.");
+            sb.AppendLine();
+            sb.AppendLine("Fix:");
+            sb.AppendLine("  - Go to https://aps.autodesk.com/myapps, open the app for ClientId: " + clientId);
+            sb.AppendLine("  - Confirm the Callback URL list contains exactly: " + callback);
+            sb.AppendLine("  - Re-copy ClientId and ClientSecret into src/ConsoleConnector/App.config");
+            sb.AppendLine("  - Ensure 'Data Exchange API' is in the app's API list.");
+            if (inner != null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("Underlying error: " + inner.Message);
+            }
+            return sb.ToString();
         }
 
         public void AddExchangeData(string exchangeTitle, ElementDataModel exchangeData)
