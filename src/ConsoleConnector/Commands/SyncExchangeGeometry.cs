@@ -82,8 +82,8 @@ namespace Autodesk.DataExchange.ConsoleApp.Commands
             };
 
             await ConsoleAppHelper.Client.SyncExchangeDataAsync(exchangeIdentifier, exchangeData);
-            await ConsoleAppHelper.Client.GenerateViewableAsync(exchangeDetails.DisplayName, exchangeDetails.ExchangeID,
-                exchangeDetails.CollectionID, exchangeDetails.FileUrn);
+            // Viewable generation is handled server-side in SDK 7.5.0; the client-side
+            // Client.GenerateViewableAsync API was removed (no replacement).
             ConsoleAppHelper.SetExchangeUpdated(exchangeTitle.Value,false);
             var exchangeDetails2 = await ConsoleAppHelper.Client.GetExchangeDetailsAsync(exchangeIdentifier);
             exchangeDetails.FileVersionUrn = exchangeDetails2.FileVersionUrn;

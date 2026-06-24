@@ -418,8 +418,8 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
         public async Task<bool> SyncExchange(DataExchangeIdentifier dataExchangeIdentifier, ExchangeDetails exchangeDetails, ElementDataModel exchangeData)
         {
             await Client.SyncExchangeDataAsync(dataExchangeIdentifier, exchangeData);
-            await Client.GenerateViewableAsync(exchangeDetails.ExchangeID,
-                exchangeDetails.CollectionID);
+            // Viewable generation is handled server-side in SDK 7.5.0; the client-side
+            // Client.GenerateViewableAsync API was removed (no replacement).
             return true;
         }
 

@@ -1,7 +1,7 @@
 using Autodesk.DataExchange.Core.Enums;
 using Autodesk.DataExchange.DataModels;
-using Autodesk.GeometryPrimitives.Data;
-using Autodesk.GeometryPrimitives.Data.DX;
+using Autodesk.GeometryUtilities.PrimitivesAPI;
+using Autodesk.GeometryUtilities.PrimitivesAPI.DX;
 using System;
 using System.Collections.Generic;
 using System.IO;
