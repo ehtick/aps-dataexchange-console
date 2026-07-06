@@ -2,7 +2,7 @@
 
 [![oAuth2](https://img.shields.io/badge/oAuth2-v2-green.svg)](http://developer.autodesk.com/)
 ![.NET](https://img.shields.io/badge/.NET%20Framework-4.8-blue.svg)
-![SDK Version](https://img.shields.io/badge/Data%20Exchange%20SDK-7.2.1--beta-orange.svg)
+![SDK Version](https://img.shields.io/badge/Data%20Exchange%20SDK-7.5.0--beta-orange.svg)
 ![Intermediary](https://img.shields.io/badge/Level-Intermediary-lightblue.svg)
 [![License](https://img.shields.io/badge/License-Autodesk%20SDK-blue.svg)](LICENSE)
 
@@ -24,7 +24,7 @@ This is a **sample console connector** that demonstrates how to use the Autodesk
 - [🚀 Quick Start](#-quick-start) - Get up and running quickly
 - [💻 Usage Examples](#-usage-examples) - See the console connector in action
 - [📚 Command Reference](#-command-reference) - Complete command documentation
-- [🔄 Migration Guide](#-migration-guide-sdk-721-upgrade) - **SDK 7.2.1 Upgrade Guide**
+- [🔄 Migration Guide](#-migration-guide-sdk-750-upgrade) - **SDK 7.5.0 Upgrade Guide**
 - [🏗️ Architecture](#️-architecture) - Understand the codebase structure
 - [🔧 Extending the Application](#-extending-the-application) - Add custom functionality
 
@@ -222,6 +222,112 @@ public class MyCustomCommand : Command
 1. Create option class in `Commands/Options/`
 2. Add to command's `Options` list
 3. Use `GetOption<T>()` to access values
+
+## 🔄 Migration Guide: SDK 7.5.0 Upgrade
+
+This section documents the migration from SDK 7.4.0 to **Autodesk Data Exchange SDK 7.5.0**.
+
+### 📋 Overview of Changes
+
+- **SDK Version**: Upgraded to `Autodesk.DataExchange 7.5.0-beta`
+- **Breaking Changes**: Yes — 1 code change required (see below)
+- **Build result**: 0 errors after fixes applied
+
+### 🚀 Key Dependency Updates
+
+| Package | Previous Version | New Version | Impact |
+|---------|------------------|-------------|---------|
+| `Autodesk.DataExchange` | `7.4.0-beta` | `7.5.0-beta` | **Minor** - 1 breaking change |
+
+### ⚠️ Breaking Changes
+
+#### 1. `Client.GenerateViewableAsync` removed — viewable generation is now server-side
+
+In SDK 7.5.0 viewable generation is handled **server-side**. The client-side
+`Client.GenerateViewableAsync` API was removed with **no replacement** — after
+`SyncExchangeDataAsync` completes, the service generates the viewable automatically.
+
+**Before (7.4.0):**
+```csharp
+await Client.SyncExchangeDataAsync(dataExchangeIdentifier, exchangeData);
+await Client.GenerateViewableAsync(exchangeDetails.ExchangeID, exchangeDetails.CollectionID);
+```
+
+**After (7.5.0):**
+```csharp
+await Client.SyncExchangeDataAsync(dataExchangeIdentifier, exchangeData);
+// Viewable generation is handled server-side in SDK 7.5.0; the client-side
+// Client.GenerateViewableAsync API was removed (no replacement).
+```
+
+**Migration Action:** Remove all calls to `Client.GenerateViewableAsync`.
+
+### 🔧 Migration Steps
+
+#### Step 1: Update Package References
+
+Update your `packages.config`:
+
+```xml
+<package id="Autodesk.DataExchange" version="7.5.0-beta" targetFramework="net48" />
+```
+
+Update `ConsoleConnector.csproj` and `ConsoleConnector_Test.csproj`:
+- Assembly version: `Version=7.4.0.0` → `Version=7.5.0.0`
+- HintPaths: `Autodesk.DataExchange.7.4.0-beta\` → `Autodesk.DataExchange.7.5.0-beta\`
+- Build target imports: same substitution
+
+#### Step 2: Apply the Code Fix
+
+1. **`ConsoleAppHelper.cs`** — remove the `Client.GenerateViewableAsync` call after `SyncExchangeDataAsync`.
+2. **`SyncExchangeGeometry.cs`** — remove the `Client.GenerateViewableAsync` call after `SyncExchangeDataAsync`.
+
+#### Step 3: Restore and Rebuild
+
+**Command Line:**
+```bash
+BuildSolution.bat
+```
+
+#### Step 4: Verify
+
+Run the comprehensive workflow test to confirm everything works as expected:
+
+```bash
+>> WorkFlowTest
+```
+
+### 🎯 Summary of Changes
+
+| Aspect | SDK 7.4.0 | SDK 7.5.0 |
+|--------|-----------|-----------|
+| Viewable generation | Client-side via `GenerateViewableAsync` | Server-side; API removed |
+| Upgrade effort | - | ~10 min — 2 files changed |
+
+### 🧪 Testing Your Migration
+
+After upgrading, run the comprehensive workflow test:
+
+```bash
+>> WorkFlowTest
+```
+
+This command validates:
+- ✅ Exchange creation and management
+- ✅ Geometry processing (BREP, IFC, Mesh, Primitives)
+- ✅ Parameter operations
+- ✅ Synchronization workflows
+- ✅ File download capabilities
+
+---
+
+**Migration Checklist:**
+- [x] Updated all package references to 7.5.0-beta
+- [x] Restored NuGet packages and rebuilt the solution (0 errors)
+- [x] Removed `Client.GenerateViewableAsync` calls
+- [ ] Tested core workflows with `WorkFlowTest`
+
+---
 
 ## 🔄 Migration Guide: SDK 7.4.0 Upgrade
 
