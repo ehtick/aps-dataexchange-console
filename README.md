@@ -2,7 +2,7 @@
 
 [![oAuth2](https://img.shields.io/badge/oAuth2-v2-green.svg)](http://developer.autodesk.com/)
 ![.NET](https://img.shields.io/badge/.NET%20Framework-4.8-blue.svg)
-![SDK Version](https://img.shields.io/badge/Data%20Exchange%20SDK-7.5.0--beta-orange.svg)
+![SDK Version](https://img.shields.io/badge/Data%20Exchange%20SDK-7.6.0--alpha-orange.svg)
 ![Intermediary](https://img.shields.io/badge/Level-Intermediary-lightblue.svg)
 [![License](https://img.shields.io/badge/License-Autodesk%20SDK-blue.svg)](LICENSE)
 
@@ -24,7 +24,7 @@ This is a **sample console connector** that demonstrates how to use the Autodesk
 - [🚀 Quick Start](#-quick-start) - Get up and running quickly
 - [💻 Usage Examples](#-usage-examples) - See the console connector in action
 - [📚 Command Reference](#-command-reference) - Complete command documentation
-- [🔄 Migration Guide](#-migration-guide-sdk-750-upgrade) - **SDK 7.5.0 Upgrade Guide**
+- [🔄 Migration Guide](#-migration-guide-sdk-760-upgrade) - **SDK 7.6.0 Upgrade Guide**
 - [🏗️ Architecture](#️-architecture) - Understand the codebase structure
 - [🔧 Extending the Application](#-extending-the-application) - Add custom functionality
 
@@ -222,6 +222,138 @@ public class MyCustomCommand : Command
 1. Create option class in `Commands/Options/`
 2. Add to command's `Options` list
 3. Use `GetOption<T>()` to access values
+
+## 🔄 Migration Guide: SDK 7.6.0 Upgrade
+
+This section documents the migration from SDK 7.5.0 to **Autodesk Data Exchange SDK 7.6.0-alpha**.
+
+### 📋 Overview of Changes
+
+- **SDK Version**: Upgraded to `Autodesk.DataExchange 7.6.0-alpha`
+- **Breaking Changes**: Yes — several `Element`/`ElementDataModel` APIs moved from concrete classes to interfaces (see below)
+- **Build result**: 0 errors after fixes applied
+
+### 🚀 Key Dependency Updates
+
+| Package | Previous Version | New Version | Impact |
+|---------|------------------|-------------|---------|
+| `Autodesk.DataExchange` | `7.5.0-beta` | `7.6.0-alpha` | **Minor** - a few breaking changes |
+
+### ⚠️ Breaking Changes
+
+#### 1. `Client.GetElementDataModelAsync` now returns `IElementDataModel` instead of `ElementDataModel`
+
+The concrete `Autodesk.DataExchange.DataModels.ElementDataModel` class still exists and still implements `IElementDataModel`, so an explicit cast is sufficient — no data model changes required.
+
+**Before (7.5.0):**
+```csharp
+currentExchangeData = (await Client.GetElementDataModelAsync(exchangeIdentifier)).Value;
+```
+
+**After (7.6.0-alpha):**
+```csharp
+currentExchangeData = (ElementDataModel)(await Client.GetElementDataModelAsync(exchangeIdentifier)).Value;
+```
+
+**Migration Action:** Add an explicit cast to `ElementDataModel` wherever `Client.GetElementDataModelAsync(...).Value` is assigned to an `ElementDataModel`-typed variable or dictionary.
+
+#### 2. `IElementDataModel.Elements` yields `IElement`, not `Element`
+
+Iterating `elementDataModel.Elements` (e.g. via `FirstOrDefault`) now produces `IElement` instances. Code paths that pass a retrieved element into a method typed to accept the concrete `Element` class no longer compile.
+
+**Migration Action:** Change parameter types that receive a *retrieved* element (as opposed to one just created via `AddElement`) from `Element` to `IElement` — e.g. `ParameterHelper.AddCustomParameter`/`AddBuiltInParameter` in `Helper/ParameterHelper.cs`.
+
+#### 3. `IElement.Type` / `Element.Type` is now `IElementType`, not `string`
+
+`Element.Type` used to be a plain string (e.g. `"Walls"`). The interface-typed `IElement.Type` returns `IElementType`, which exposes the same value via `IClassification.Value`.
+
+**Before (7.5.0):**
+```csharp
+elementDataModel.DeleteTypeParameter(element.Type, parameterName.Value);
+```
+
+**After (7.6.0-alpha):**
+```csharp
+elementDataModel.DeleteTypeParameter(element.Type.Value, parameterName.Value);
+```
+
+Similarly, prefer the new handle-based `AddTypeParameterAsync(IElementType, IParameter)` over the by-name `CreateTypeParameterAsync(string, IParameter)` when a type handle is already available (avoids a global name lookup):
+
+```csharp
+await elementDataModel.AddTypeParameterAsync(element.Type, parameter);
+```
+
+**Migration Action:** Replace `element.Type` usages that need a string with `element.Type.Value`, and switch `CreateTypeParameterAsync(element.Type, ...)` calls to `AddTypeParameterAsync(element.Type, ...)`.
+
+### 🔧 Migration Steps
+
+#### Step 1: Update Package References
+
+Update your `packages.config`:
+
+```xml
+<package id="Autodesk.DataExchange" version="7.6.0-alpha" targetFramework="net48" />
+```
+
+Update `ConsoleConnector.csproj` and `ConsoleConnector_Test.csproj`:
+- Assembly version: `Version=7.5.0.0` → `Version=7.6.0.0`
+- HintPaths: `Autodesk.DataExchange.7.5.0-beta\` → `Autodesk.DataExchange.7.6.0-alpha\`
+- Build target imports: same substitution
+
+#### Step 2: Apply the Code Fixes
+
+1. **`ConsoleAppHelper.cs`** — cast `Client.GetElementDataModelAsync(...).Value` (`IElementDataModel`) to `ElementDataModel` at both call sites.
+2. **`ParameterHelper.cs`** — change `AddCustomParameter`/`AddBuiltInParameter` element parameters from `Element` to `IElement`; switch `CreateTypeParameterAsync(element.Type, ...)` to `AddTypeParameterAsync(element.Type, ...)`.
+3. **`DeleteParameter.cs`** — change `element.Type` to `element.Type.Value` in both `DeleteTypeParameter` calls.
+
+#### Step 3: Restore and Rebuild
+
+**Command Line:**
+```bash
+BuildSolution.bat
+```
+
+#### Step 4: Verify
+
+Run the comprehensive workflow test to confirm everything works as expected:
+
+```bash
+>> WorkFlowTest
+```
+
+### 🎯 Summary of Changes
+
+| Aspect | SDK 7.5.0 | SDK 7.6.0-alpha |
+|--------|-----------|-----------------|
+| Element retrieval | Returns `ElementDataModel`/concrete `Element` | Returns `IElementDataModel`/`IElement` |
+| Element type | `Element.Type` is `string` | `IElement.Type` is `IElementType` (use `.Value` for the string) |
+| Upgrade effort | - | ~20 min — 3 files changed |
+
+### 🧪 Testing Your Migration
+
+After upgrading, run the comprehensive workflow test:
+
+```bash
+>> WorkFlowTest
+```
+
+This command validates:
+- ✅ Exchange creation and management
+- ✅ Geometry processing (BREP, IFC, Mesh, Primitives)
+- ✅ Parameter operations
+- ✅ Synchronization workflows
+- ✅ File download capabilities
+
+---
+
+**Migration Checklist:**
+- [x] Updated all package references to 7.6.0-alpha
+- [x] Fixed `Element`/`ElementDataModel` → `IElement`/`IElementDataModel` breaking changes
+- [x] Restored NuGet packages and rebuilt the solution (0 errors)
+- [x] Ran the MSTest unit test suite (11/11 passed)
+- [ ] Tested core workflows with `WorkFlowTest`
+
+---
 
 ## 🔄 Migration Guide: SDK 7.5.0 Upgrade
 

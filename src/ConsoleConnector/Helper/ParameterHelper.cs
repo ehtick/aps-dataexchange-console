@@ -14,7 +14,7 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
 {
     internal class ParameterHelper
     {
-        public async Task<IParameter> AddCustomParameter(ElementDataModel elementDataModel, string parameterName, string parameterValue, Element element, ParameterDataTypeEnum parameterDataType, bool isTypeParameter)
+        public async Task<IParameter> AddCustomParameter(ElementDataModel elementDataModel, string parameterName, string parameterValue, IElement element, ParameterDataTypeEnum parameterDataType, bool isTypeParameter)
         {
             if (parameterName.Contains(" "))
             {
@@ -53,7 +53,7 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
             customParameterInt.IsCustomParameter = true;
             if (isTypeParameter)
             {
-                await elementDataModel.CreateTypeParameterAsync(element.Type, customParameterInt);
+                await elementDataModel.AddTypeParameterAsync(element.Type, customParameterInt);
             }
             else
             {
@@ -71,7 +71,7 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
             return null;
         }
 
-        public async Task<IParameter> AddBuiltInParameter(ElementDataModel elementDataModel,string name, string schemaId, Element element,string parameterValue, ParameterDataTypeEnum parameterDataType, bool isTypeParameter)
+        public async Task<IParameter> AddBuiltInParameter(ElementDataModel elementDataModel,string name, string schemaId, IElement element,string parameterValue, ParameterDataTypeEnum parameterDataType, bool isTypeParameter)
         {            
             var instanceParameters = element.InstanceParameters.Count();
             var typeParameters = element.TypeParameters.Count();
@@ -93,7 +93,7 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
             parameter.Name = name;
 
             if (isTypeParameter)
-                await elementDataModel.CreateTypeParameterAsync(element.Type, parameter);
+                await elementDataModel.AddTypeParameterAsync(element.Type, parameter);
             else
                 await element.CreateInstanceParameterAsync(parameter);
 
