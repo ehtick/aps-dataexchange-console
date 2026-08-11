@@ -232,7 +232,7 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
                     HubId = hubId
                 });
                 currentExchangeData.Wait();
-                _exchangeData[exchangeTitle] = currentExchangeData.Result.Value;
+                _exchangeData[exchangeTitle] = (ElementDataModel)currentExchangeData.Result.Value;
             }
 
             return _exchangeData[exchangeTitle];
@@ -511,7 +511,7 @@ namespace Autodesk.DataExchange.ConsoleApp.Helper
                 if (currentExchangeData == null /*|| currentExchangeData?.ExchangeID != exchangeIdentifier.ExchangeId*/)
                 {
                     // Get full Exchange Data till the latest revision
-                    currentExchangeData = (await Client.GetElementDataModelAsync(exchangeIdentifier)).Value;
+                    currentExchangeData = (ElementDataModel)(await Client.GetElementDataModelAsync(exchangeIdentifier)).Value;
                     currentRevision = firstRev;
 
                     var data = currentExchangeData;// ElementDataModel.Create(Client, currentExchangeData);

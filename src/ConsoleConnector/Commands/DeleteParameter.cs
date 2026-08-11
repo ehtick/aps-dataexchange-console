@@ -62,7 +62,7 @@ namespace Autodesk.DataExchange.ConsoleApp.Commands
             }
             else if (parameterName.Value != null && IsInstanceParameter==false)
             {
-                parameterIsDeleted = elementDataModel.DeleteTypeParameter(element.Type ,parameterName.Value);
+                parameterIsDeleted = elementDataModel.DeleteTypeParameter(element.Type.Value ,parameterName.Value);
             }
             else if (parameterName.Value == null && IsInstanceParameter)
             {
@@ -71,7 +71,7 @@ namespace Autodesk.DataExchange.ConsoleApp.Commands
             }
             else if (parameterName.Value == null && IsInstanceParameter == false)
             {
-                parameterIsDeleted = elementDataModel.DeleteTypeParameter(element.Type, parameterName.SchemaName);
+                parameterIsDeleted = elementDataModel.DeleteTypeParameter(element.Type.Value, parameterName.SchemaName);
             }
 
             if (parameterIsDeleted)
